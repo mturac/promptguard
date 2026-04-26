@@ -15,7 +15,7 @@ def main(argv: list[str] | None = None) -> int:
 
     audit = subparsers.add_parser("audit", help="audit prompt contracts")
     audit.add_argument("path", type=Path, help="file path or - for stdin")
-    audit.add_argument("--format", choices=["markdown", "json", "table"], default="markdown")
+    audit.add_argument("--format", choices=["markdown", "json", "table", "csv"], default="markdown")
     audit.add_argument("--save", action="store_true", help="append report to .promptguard/reports.jsonl")
 
     args = parser.parse_args(argv)

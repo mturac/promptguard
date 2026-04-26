@@ -104,9 +104,10 @@ Behavior:
 
 - prompt-like edits are audited before writing
 - high/critical findings block write until explicit approval
-- Codex/OpenCode/OpenClaw get global `AGENTS.md` rules
+- Codex/OpenCode get global `AGENTS.md` rules
+- OpenClaw gets workspace `AGENTS.md` plus a `before_tool_call` plugin that blocks unsafe prompt writes
 - Claude gets `CLAUDE.md`, optional hook config, and `/prompt-audit`
-- The adapters copy the self-contained `skills/promptguard` bundle into each agent config directory, so the guard can run without a separate global CLI install.
+- The adapters copy the self-contained `skills/promptguard` bundle into each agent config/workspace directory, so the guard can run without a separate global CLI install.
 
 ## Installable Skill
 

@@ -30,6 +30,32 @@ dest.write_text(text, encoding="utf-8")
 PY
 }
 
+install_block_prepend() {
+  local src="$1"
+  local dest="$2"
+  local name="$3"
+  mkdir -p "$(dirname "$dest")"
+  touch "$dest"
+  python3 - "$src" "$dest" "$name" <<'PY'
+from pathlib import Path
+import sys
+
+src = Path(sys.argv[1])
+dest = Path(sys.argv[2])
+name = sys.argv[3]
+start = f"<!-- BEGIN {name} -->"
+end = f"<!-- END {name} -->"
+block = f"{start}\n{src.read_text(encoding='utf-8').strip()}\n{end}\n"
+text = dest.read_text(encoding="utf-8")
+if start in text and end in text:
+    before = text.split(start, 1)[0]
+    after = text.split(end, 1)[1]
+    text = before.rstrip() + "\n" + after.lstrip()
+text = block + "\n" + text.lstrip()
+dest.write_text(text, encoding="utf-8")
+PY
+}
+
 install_codex() {
   mkdir -p "$HOME/.codex/skills" "$HOME/.codex"
   rm -rf "$HOME/.codex/skills/promptguard"
@@ -58,11 +84,19 @@ install_opencode() {
 }
 
 install_openclaw() {
-  mkdir -p "$HOME/.config/openclaw/skills"
-  rm -rf "$HOME/.config/openclaw/skills/promptguard"
-  cp -R "$ROOT/skills/promptguard" "$HOME/.config/openclaw/skills/promptguard"
-  install_block "$ROOT/adapters/openclaw/AGENTS.md" "$HOME/.config/openclaw/AGENTS.md" "PROMPTGUARD"
-  echo "Installed PromptGuard rules and skill for OpenClaw."
+  mkdir -p "$HOME/.openclaw/workspace/skills" "$HOME/.openclaw/skills"
+  rm -rf "$HOME/.openclaw/workspace/skills/promptguard" "$HOME/.openclaw/skills/promptguard"
+  cp -R "$ROOT/skills/promptguard" "$HOME/.openclaw/workspace/skills/promptguard"
+  cp -R "$ROOT/skills/promptguard" "$HOME/.openclaw/skills/promptguard"
+  install_block_prepend "$ROOT/adapters/openclaw/AGENTS.md" "$HOME/.openclaw/workspace/AGENTS.md" "PROMPTGUARD"
+  if command -v openclaw >/dev/null 2>&1; then
+    openclaw plugins uninstall promptguard >/dev/null 2>&1 || true
+    openclaw plugins install --link "$ROOT/adapters/openclaw/plugin" >/dev/null
+    openclaw plugins enable promptguard >/dev/null || true
+    echo "Installed PromptGuard rules, skill, and pre-write plugin for OpenClaw."
+  else
+    echo "Installed PromptGuard rules and skill for OpenClaw. Install the plugin later with: openclaw plugins install --link adapters/openclaw/plugin"
+  fi
 }
 
 case "${1:-all}" in

@@ -1,6 +1,8 @@
+import csv
 import json
 import subprocess
 import sys
+from io import StringIO
 from pathlib import Path
 
 from promptguard.auditor import audit_prompts
@@ -43,3 +45,18 @@ def test_cli_audits_stdin_before_write():
     )
     assert result.returncode == 1
     assert "PG007" in result.stdout
+
+
+def test_cli_exports_csv():
+    result = subprocess.run(
+        [sys.executable, "-m", "promptguard", "audit", "-", "--format", "csv"],
+        input="Bana rapor hazırla.",
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 1
+    rows = list(csv.DictReader(StringIO(result.stdout)))
+    assert rows
+    assert "id" in rows[0]
+    assert "PG007" in {row["id"] for row in rows}

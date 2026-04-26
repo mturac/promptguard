@@ -1,0 +1,12 @@
+{
+  "name": "promptguard",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "PromptGuard pre-write guard for OpenClaw tool calls",
+  "main": "index.js",
+  "openclaw": {
+    "extensions": [
+      "./index.js"
+    ]
+  }
+}

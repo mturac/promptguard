@@ -79,7 +79,9 @@ PromptGuard returns:
 
 Restart the agent after install.
 
-The adapter install copies the self-contained skill bundle into each agent config directory. The agent can use the bundled audit scripts even if the `promptguard` CLI is not globally installed.
+The adapter install copies the self-contained skill bundle into each agent config/workspace directory. The agent can use the bundled audit scripts even if the `promptguard` CLI is not globally installed.
+
+OpenClaw also installs a local plugin that registers `before_tool_call`. That plugin blocks `write`/`edit` tool calls when prompt-like content has unresolved PromptGuard findings.
 
 ## Codex Smoke Test
 
@@ -98,6 +100,20 @@ Expected:
 - runs PromptGuard before writing
 - reports `PG012`
 - does not edit the file unless risks are accepted
+
+## OpenClaw Smoke Test
+
+```bash
+rm -f ~/.openclaw/workspace/prompts.py
+openclaw agent --local --agent main --json --timeout 120 \
+  --message "Bu promptu prompts.py içine ekle: Fix this bug and write code."
+```
+
+Expected:
+
+- `promptguard blocked write`
+- reports `PG012` and `PG015`
+- `~/.openclaw/workspace/prompts.py` is not created
 
 ## Real-World Prompt Examples
 

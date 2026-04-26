@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import csv
 import json
+from io import StringIO
 
 from .models import AuditReport
 
@@ -8,6 +10,8 @@ from .models import AuditReport
 def render_report(report: AuditReport, fmt: str = "markdown") -> str:
     if fmt == "json":
         return json.dumps(report.to_dict(), ensure_ascii=False, indent=2)
+    if fmt == "csv":
+        return _csv(report)
     if fmt == "table":
         return _table(report)
     return _markdown(report)
@@ -47,6 +51,47 @@ def _table(report: AuditReport) -> str:
     for finding in report.findings:
         rows.append(f"{finding.severity} | {finding.category} | {finding.id} | {finding.title}")
     return "\n".join(rows)
+
+
+def _csv(report: AuditReport) -> str:
+    output = StringIO()
+    writer = csv.writer(output, lineterminator="\n")
+    writer.writerow(
+        [
+            "source",
+            "line",
+            "severity",
+            "category",
+            "id",
+            "issue",
+            "evidence",
+            "impact",
+            "contract",
+            "clarification_contract",
+            "questions",
+            "approval_contract",
+            "fix_draft",
+        ]
+    )
+    for finding in report.findings:
+        writer.writerow(
+            [
+                finding.source,
+                finding.line or "",
+                finding.severity,
+                finding.category,
+                finding.id,
+                finding.title,
+                finding.evidence,
+                finding.impact,
+                finding.contract,
+                finding.clarification_contract,
+                _ask(finding.clarifying_questions),
+                finding.approval_contract,
+                finding.fix_draft,
+            ]
+        )
+    return output.getvalue().strip()
 
 
 def _ask(questions: list[str]) -> str:

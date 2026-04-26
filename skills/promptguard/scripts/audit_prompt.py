@@ -3,8 +3,10 @@ from __future__ import annotations
 
 import argparse
 import ast
+import csv
 import json
 from dataclasses import asdict, dataclass
+from io import StringIO
 from pathlib import Path
 from typing import Any
 
@@ -37,7 +39,7 @@ class Finding:
 def main() -> int:
     parser = argparse.ArgumentParser(prog="audit_prompt.py")
     parser.add_argument("path", type=Path)
-    parser.add_argument("--format", choices=["markdown", "json", "table"], default="markdown")
+    parser.add_argument("--format", choices=["markdown", "json", "table", "csv"], default="markdown")
     args = parser.parse_args()
 
     prompts = extract_prompts(args.path)
@@ -155,6 +157,45 @@ def render(findings: list[Finding], fmt: str, source: Path, prompts_checked: int
         rows = ["severity | category | id | issue", "--- | --- | --- | ---"]
         rows.extend(f"{f.severity} | {f.category} | {f.id} | {f.title}" for f in findings)
         return "\n".join(rows)
+    if fmt == "csv":
+        output = StringIO()
+        writer = csv.writer(output, lineterminator="\n")
+        writer.writerow(
+            [
+                "source",
+                "line",
+                "severity",
+                "category",
+                "id",
+                "issue",
+                "evidence",
+                "impact",
+                "contract",
+                "clarification_contract",
+                "questions",
+                "approval_contract",
+                "fix_draft",
+            ]
+        )
+        for f in findings:
+            writer.writerow(
+                [
+                    f.source,
+                    f.line or "",
+                    f.severity,
+                    f.category,
+                    f.id,
+                    f.title,
+                    f.evidence,
+                    f.impact,
+                    f.contract,
+                    f.clarification_contract,
+                    ask(f.clarifying_questions),
+                    f.approval_contract,
+                    f.fix_draft,
+                ]
+            )
+        return output.getvalue().strip()
 
     lines = [f"# PromptGuard Audit\n\nSource: `{source}`\nPrompts checked: {prompts_checked}\nFindings: {len(findings)}\n"]
     for finding in findings:

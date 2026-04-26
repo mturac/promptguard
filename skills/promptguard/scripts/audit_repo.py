@@ -37,7 +37,7 @@ EXTENSIONS = {".md", ".txt", ".py", ".json", ".yaml", ".yml"}
 def main() -> int:
     parser = argparse.ArgumentParser(prog="audit_repo.py")
     parser.add_argument("root", nargs="?", type=Path, default=Path("."))
-    parser.add_argument("--format", choices=["markdown", "json", "table"], default="markdown")
+    parser.add_argument("--format", choices=["markdown", "json", "table", "csv"], default="markdown")
     args = parser.parse_args()
 
     files = list(prompt_files(args.root))

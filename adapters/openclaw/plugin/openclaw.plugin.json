@@ -1,0 +1,20 @@
+{
+  "id": "promptguard",
+  "name": "PromptGuard",
+  "description": "Blocks OpenClaw prompt writes when prompt contracts fail audit.",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "enabled": {
+        "type": "boolean"
+      }
+    }
+  },
+  "uiHints": {
+    "enabled": {
+      "label": "PromptGuard pre-write guard",
+      "help": "Blocks write/edit tool calls that attempt to save prompt-like content with unresolved PromptGuard findings."
+    }
+  }
+}
