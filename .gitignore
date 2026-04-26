@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+.promptguard/
+
+# Local/private working notes; do not publish in the OSS repo.
+notes.md
+eval/hresoprano_prompts.py

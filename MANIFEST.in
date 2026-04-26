@@ -1,0 +1,12 @@
+include README.md
+include promptguard/rules.json
+recursive-include skills/promptguard *
+recursive-include adapters *
+recursive-include eval *.jsonl
+include LICENSE
+include CHANGELOG.md
+include CONTRIBUTING.md
+include SECURITY.md
+include USAGE.md
+include EXAMPLES.md
+recursive-include docs *.md

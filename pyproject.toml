@@ -1,0 +1,30 @@
+[project]
+name = "promptguard"
+version = "0.1.0"
+description = "Agent-native prompt contract auditor and pre-write guard."
+requires-python = ">=3.10"
+dependencies = []
+readme = "README.md"
+license = "MIT"
+keywords = ["prompt", "llm", "agents", "codex", "claude", "guardrails"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Environment :: Console",
+  "Topic :: Software Development :: Quality Assurance",
+]
+
+[project.scripts]
+promptguard = "promptguard.cli:main"
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "build>=1"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools.package-data]
+promptguard = ["rules.json"]
+
+[tool.setuptools.packages.find]
+include = ["promptguard*"]

@@ -1,0 +1,8 @@
+interface:
+  display_name: "PromptGuard"
+  short_description: "Audit prompts as executable contracts"
+  brand_color: "#2563EB"
+  default_prompt: "Use $promptguard to audit this system prompt for missing contracts, conflicts, and safety gaps."
+
+policy:
+  allow_implicit_invocation: true
