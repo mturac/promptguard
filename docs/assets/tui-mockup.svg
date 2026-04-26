@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" role="img" aria-labelledby="title desc">
+  <title id="title">PromptGuard TUI mockup</title>
+  <desc id="desc">A realistic dark terminal interface showing PromptGuard findings, details, questions, approval criteria, and fix draft.</desc>
+  <rect width="1440" height="900" fill="#0b1020"/>
+  <rect x="72" y="56" width="1296" height="788" rx="14" fill="#111827" stroke="#334155" stroke-width="2"/>
+  <rect x="72" y="56" width="1296" height="52" rx="14" fill="#182235"/>
+  <circle cx="104" cy="82" r="7" fill="#ef4444"/>
+  <circle cx="128" cy="82" r="7" fill="#f59e0b"/>
+  <circle cx="152" cy="82" r="7" fill="#22c55e"/>
+  <text x="188" y="88" fill="#e5e7eb" font-family="SFMono-Regular, Menlo, monospace" font-size="18" font-weight="700">PromptGuard audit - prompts.py</text>
+  <text x="1032" y="88" fill="#94a3b8" font-family="SFMono-Regular, Menlo, monospace" font-size="15">Findings 4   Blocking 2</text>
+
+  <line x1="460" y1="108" x2="460" y2="844" stroke="#334155" stroke-width="2"/>
+  <line x1="72" y1="740" x2="1368" y2="740" stroke="#334155" stroke-width="2"/>
+
+  <text x="104" y="150" fill="#94a3b8" font-family="SFMono-Regular, Menlo, monospace" font-size="14">FINDINGS</text>
+  <rect x="96" y="178" width="336" height="64" rx="8" fill="#27151a" stroke="#ef4444" stroke-width="1"/>
+  <text x="116" y="204" fill="#fecaca" font-family="SFMono-Regular, Menlo, monospace" font-size="15" font-weight="700">HIGH  PG012</text>
+  <text x="116" y="226" fill="#e5e7eb" font-family="SFMono-Regular, Menlo, monospace" font-size="14">missing responsibility</text>
+
+  <rect x="96" y="254" width="336" height="64" rx="8" fill="#27151a" stroke="#ef4444" stroke-width="1"/>
+  <text x="116" y="280" fill="#fecaca" font-family="SFMono-Regular, Menlo, monospace" font-size="15" font-weight="700">HIGH  PG015</text>
+  <text x="116" y="302" fill="#e5e7eb" font-family="SFMono-Regular, Menlo, monospace" font-size="14">technical risk contract</text>
+
+  <rect x="96" y="330" width="336" height="64" rx="8" fill="#292313" stroke="#f59e0b" stroke-width="1"/>
+  <text x="116" y="356" fill="#fde68a" font-family="SFMono-Regular, Menlo, monospace" font-size="15" font-weight="700">MED   PG005</text>
+  <text x="116" y="378" fill="#e5e7eb" font-family="SFMono-Regular, Menlo, monospace" font-size="14">output contract</text>
+
+  <rect x="96" y="406" width="336" height="64" rx="8" fill="#13253a" stroke="#38bdf8" stroke-width="1"/>
+  <text x="116" y="432" fill="#bae6fd" font-family="SFMono-Regular, Menlo, monospace" font-size="15" font-weight="700">INFO  FIX</text>
+  <text x="116" y="454" fill="#e5e7eb" font-family="SFMono-Regular, Menlo, monospace" font-size="14">draft available</text>
+
+  <text x="496" y="150" fill="#94a3b8" font-family="SFMono-Regular, Menlo, monospace" font-size="14">DETAIL</text>
+  <text x="496" y="190" fill="#f8fafc" font-family="SFMono-Regular, Menlo, monospace" font-size="18" font-weight="700">PG012 responsibility_contract</text>
+  <text x="496" y="226" fill="#94a3b8" font-family="SFMono-Regular, Menlo, monospace" font-size="14">Evidence</text>
+  <rect x="496" y="244" width="804" height="66" rx="8" fill="#0f172a" stroke="#334155"/>
+  <text x="516" y="272" fill="#e5e7eb" font-family="SFMono-Regular, Menlo, monospace" font-size="14">"Fix this bug and write code."</text>
+  <text x="516" y="294" fill="#94a3b8" font-family="SFMono-Regular, Menlo, monospace" font-size="13">The prompt asks for output but assigns no accountable engineering contract.</text>
+
+  <text x="496" y="350" fill="#94a3b8" font-family="SFMono-Regular, Menlo, monospace" font-size="14">Missing contract</text>
+  <text x="496" y="380" fill="#e5e7eb" font-family="SFMono-Regular, Menlo, monospace" font-size="14">Role, owned surface, constraints, non-goals, verification, changed files, residual risk.</text>
+
+  <text x="496" y="428" fill="#94a3b8" font-family="SFMono-Regular, Menlo, monospace" font-size="14">Questions to ask</text>
+  <text x="516" y="460" fill="#e5e7eb" font-family="SFMono-Regular, Menlo, monospace" font-size="14">1. Which module or files does the agent own?</text>
+  <text x="516" y="486" fill="#e5e7eb" font-family="SFMono-Regular, Menlo, monospace" font-size="14">2. What behavior must be preserved?</text>
+  <text x="516" y="512" fill="#e5e7eb" font-family="SFMono-Regular, Menlo, monospace" font-size="14">3. How should success be verified?</text>
+  <text x="516" y="538" fill="#e5e7eb" font-family="SFMono-Regular, Menlo, monospace" font-size="14">4. What must the final report include?</text>
+
+  <text x="496" y="590" fill="#94a3b8" font-family="SFMono-Regular, Menlo, monospace" font-size="14">Approval</text>
+  <rect x="496" y="608" width="804" height="64" rx="8" fill="#0f172a" stroke="#334155"/>
+  <text x="516" y="636" fill="#e5e7eb" font-family="SFMono-Regular, Menlo, monospace" font-size="14">Approve only when responsibility, owned files, constraints, verification,</text>
+  <text x="516" y="658" fill="#e5e7eb" font-family="SFMono-Regular, Menlo, monospace" font-size="14">and final report format are explicit.</text>
+
+  <text x="104" y="780" fill="#cbd5e1" font-family="SFMono-Regular, Menlo, monospace" font-size="15">[F] fix draft</text>
+  <text x="270" y="780" fill="#cbd5e1" font-family="SFMono-Regular, Menlo, monospace" font-size="15">[A] accept risk</text>
+  <text x="476" y="780" fill="#cbd5e1" font-family="SFMono-Regular, Menlo, monospace" font-size="15">[S] save report</text>
+  <text x="682" y="780" fill="#cbd5e1" font-family="SFMono-Regular, Menlo, monospace" font-size="15">[/] filter</text>
+  <text x="826" y="780" fill="#cbd5e1" font-family="SFMono-Regular, Menlo, monospace" font-size="15">[Q] quit</text>
+  <text x="104" y="818" fill="#64748b" font-family="SFMono-Regular, Menlo, monospace" font-size="13">Guardrail mode: high/critical findings block prompt writes until explicit approval.</text>
+</svg>

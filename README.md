@@ -13,6 +13,8 @@ Add this system prompt.
 
 Think of it as a prompt linter for responsibility, safety, and execution contracts.
 
+![PromptGuard TUI concept](docs/assets/tui-mockup.svg)
+
 PromptGuard does not only say "bad prompt." It reports:
 
 - what decision is missing
