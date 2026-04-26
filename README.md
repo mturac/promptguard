@@ -6,7 +6,7 @@
 
 PromptGuard audits prompts as behavioral contracts.
 
-It is for agent workflows where vague prompts cause bad work:
+It is for agent workflows where vague prompts cause bad work, especially when an agent is about to edit files, seed system prompts, or ship code:
 
 ```text
 Fix this bug and write code.
@@ -16,6 +16,14 @@ Add this system prompt.
 ```
 
 Think of it as a prompt linter for responsibility, safety, and execution contracts.
+
+Most prompt advice says "write better prompts." PromptGuard turns that into an executable check:
+
+- Is the task actually specified?
+- Is the agent responsible for a clear surface?
+- Are output format, constraints, risks, and verification explicit?
+- Are safety boundaries contradicted later in the prompt?
+- Should the agent ask for missing data instead of hallucinating a deliverable?
 
 ![PromptGuard TUI concept](docs/assets/tui-mockup.svg)
 
@@ -108,6 +116,15 @@ Behavior:
 - OpenClaw gets workspace `AGENTS.md` plus a `before_tool_call` plugin that blocks unsafe prompt writes
 - Claude gets `CLAUDE.md`, optional hook config, and `/prompt-audit`
 - The adapters copy the self-contained `skills/promptguard` bundle into each agent config/workspace directory, so the guard can run without a separate global CLI install.
+
+Adapter status:
+
+| Agent | Install target | Automatic behavior |
+| --- | --- | --- |
+| Codex | `~/.codex/skills/promptguard` + `~/.codex/AGENTS.md` | Audits prompt-like write requests before editing |
+| Claude | `~/.claude/skills/promptguard` + `CLAUDE.md` + optional hook | Hook can inject PromptGuard findings before the turn |
+| OpenCode | `~/.config/opencode/skills/promptguard` + `AGENTS.md` | Audits prompt-like write requests before editing |
+| OpenClaw | `~/.openclaw/workspace/skills/promptguard` + plugin | Blocks unsafe prompt `write`/`edit` tool calls with `before_tool_call` |
 
 ## Installable Skill
 
