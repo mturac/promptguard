@@ -9,4 +9,4 @@ include CONTRIBUTING.md
 include SECURITY.md
 include USAGE.md
 include EXAMPLES.md
-recursive-include docs *.md *.svg
+recursive-include docs *.md *.svg *.png
