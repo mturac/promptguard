@@ -1,0 +1,5 @@
+{
+  "model": "x",
+  "system": "You are a router.",
+  "nested": {"prompt": "Route carefully."}
+}

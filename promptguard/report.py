@@ -14,7 +14,65 @@ def render_report(report: AuditReport, fmt: str = "markdown") -> str:
         return _csv(report)
     if fmt == "table":
         return _table(report)
+    if fmt == "sarif":
+        return _sarif(report)
     return _markdown(report)
+
+
+_SARIF_LEVEL = {
+    "critical": "error",
+    "high": "error",
+    "medium": "warning",
+    "low": "note",
+    "info": "note",
+}
+
+
+def _sarif(report: AuditReport) -> str:
+    rules_by_id: dict[str, dict] = {}
+    results: list[dict] = []
+    for finding in report.findings:
+        if finding.id not in rules_by_id:
+            rules_by_id[finding.id] = {
+                "id": finding.id,
+                "name": finding.category,
+                "shortDescription": {"text": finding.title},
+                "fullDescription": {"text": finding.impact},
+                "defaultConfiguration": {"level": _SARIF_LEVEL.get(finding.severity, "warning")},
+                "help": {"text": finding.contract},
+            }
+        location: dict = {
+            "physicalLocation": {
+                "artifactLocation": {"uri": finding.source},
+            }
+        }
+        if finding.line is not None:
+            location["physicalLocation"]["region"] = {"startLine": max(1, int(finding.line))}
+        results.append(
+            {
+                "ruleId": finding.id,
+                "level": _SARIF_LEVEL.get(finding.severity, "warning"),
+                "message": {"text": f"{finding.title}: {finding.evidence}"},
+                "locations": [location],
+            }
+        )
+    payload = {
+        "version": "2.1.0",
+        "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+        "runs": [
+            {
+                "tool": {
+                    "driver": {
+                        "name": "PromptGuard",
+                        "informationUri": "https://github.com/mturac/promptguard",
+                        "rules": list(rules_by_id.values()),
+                    }
+                },
+                "results": results,
+            }
+        ],
+    }
+    return json.dumps(payload, ensure_ascii=False, indent=2)
 
 
 def _markdown(report: AuditReport) -> str:

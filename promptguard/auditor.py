@@ -2,16 +2,25 @@ from __future__ import annotations
 
 import json
 from importlib.resources import files
+from pathlib import Path
 from typing import Any
 
 from .models import AuditReport, Finding, PromptInput
+from .packs import resolve_rules
 
 
-def audit_prompts(prompts: list[PromptInput], source: str) -> AuditReport:
-    rules = _load_rules()
+def audit_prompts(
+    prompts: list[PromptInput],
+    source: str,
+    *,
+    rules: list[dict[str, Any]] | None = None,
+    profile: str = "general",
+    rules_path: Path | None = None,
+) -> AuditReport:
+    active_rules = rules if rules is not None else resolve_rules(profile=profile, rules_path=rules_path)
     findings: list[Finding] = []
     for prompt in prompts:
-        findings.extend(_audit_prompt(prompt, rules))
+        findings.extend(_audit_prompt(prompt, active_rules))
     return AuditReport.create(source=source, prompts_checked=len(prompts), findings=findings)
 
 
@@ -30,7 +39,7 @@ def _audit_prompt(prompt: PromptInput, rules: list[dict[str, Any]]) -> list[Find
                     impact=rule["impact"],
                     recommendation=rule["recommendation"],
                     contract=rule["contract"],
-                    fix_draft=rule["fix_draft"],
+                    fix_draft=_grounded_fix_draft(rule, prompt.content),
                     clarifying_questions=rule.get("clarifying_questions", []),
                     clarification_contract=rule.get("clarification_contract", _default_clarification(rule)),
                     approval_contract=rule.get("approval_contract", _default_approval(rule)),
@@ -39,6 +48,28 @@ def _audit_prompt(prompt: PromptInput, rules: list[dict[str, Any]]) -> list[Find
                 )
             )
     return findings
+
+
+def _grounded_fix_draft(rule: dict[str, Any], content: str, *, max_chars: int = 800) -> str:
+    """Merge original prompt wording with the rule contract checklist."""
+    snippet = " ".join(content.strip().split())
+    if len(snippet) > max_chars:
+        snippet = snippet[: max_chars - 1].rstrip() + "…"
+    template = str(rule.get("fix_draft", "")).strip()
+    contract = str(rule.get("contract", "")).strip()
+    title = str(rule.get("title", "missing contract")).strip()
+    parts = [
+        "Grounded rewrite draft:",
+        f"Original intent: {snippet}" if snippet else "Original intent: (empty prompt)",
+        f"Missing/weak contract ({title}): {contract}" if contract else f"Missing/weak contract: {title}",
+    ]
+    if template:
+        parts.append(f"Apply: {template}")
+    parts.append(
+        "Keep the operator's wording where possible; insert explicit role, owned surface, "
+        "constraints, verification, and report sections as required by the contract."
+    )
+    return "\n".join(parts)
 
 
 def _matches(rule: dict[str, Any], text: str, original: str) -> bool:
@@ -76,6 +107,7 @@ def _norm(text: str) -> str:
 
 
 def _load_rules() -> list[dict[str, Any]]:
+    """Backward-compatible catalog load (prefer resolve_rules / audit_prompts kwargs)."""
     raw = files("promptguard").joinpath("rules.json").read_text(encoding="utf-8")
     return json.loads(raw)
 

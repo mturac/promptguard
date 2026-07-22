@@ -45,21 +45,33 @@ If high or critical findings appear, do not write yet. Show findings and ask for
 
 ## Deterministic Audit
 
-If the prompt is in a local file, run this before finalizing:
+Prefer the installed package when available:
 
 ```bash
-python3 skills/promptguard/scripts/audit_prompt.py path/to/prompt-file --format markdown
+promptguard audit path/to/prompt-file --profile coding-agent --fail-on high --format markdown
+promptguard audit-repo . --profile coding-agent --fail-on high --format sarif
 ```
 
-If this skill is installed into `$CODEX_HOME/skills/promptguard`, run the script from that installed path instead.
+Skill scripts delegate to the same CLI (package import or repo `pip install -e .`):
+
+```bash
+python3 skills/promptguard/scripts/audit_prompt.py path/to/prompt-file --profile coding-agent --fail-on high --format markdown
+python3 skills/promptguard/scripts/audit_repo.py . --profile system --format markdown
+```
+
+Supported flags (shared with package CLI):
+
+- `--profile general|coding-agent|system|security`
+- `--fail-on critical|high|medium|low|info|none`
+- `--rules PATH`
+- `--format markdown|json|table|csv|sarif`
+- `--accept-risk ID:reason` (repeatable)
+- `--apply-accepted`
+- `--save`
+
+If this skill is installed into `$CODEX_HOME/skills/promptguard`, run the script from that installed path and ensure the `promptguard` package is importable.
 
 Do not stop after discovering prompt files. Discovery is not completion. If a prompt-like file exists and the script exists, running the script is mandatory.
-
-If the user asks for a report without naming a file, run:
-
-```bash
-python3 skills/promptguard/scripts/audit_repo.py . --format markdown
-```
 
 ## Severity
 
@@ -69,3 +81,9 @@ python3 skills/promptguard/scripts/audit_repo.py . --format markdown
 - `low`: maintainability or clarity issue.
 
 Prefer concrete contract fixes over generic prompt advice.
+
+## Out of scope (this skill)
+
+- Interactive TUI
+- LLM-as-judge second pass
+- Runtime chat firewalls / red-team attack generation

@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.2.0
+
+- Profiles: `general`, `coding-agent`, `system`, `security` (`--profile`).
+- Severity exit gate: `--fail-on` (legacy any-finding when omitted).
+- Rule packs under `promptguard/packs/` plus `--rules PATH`.
+- Multi-surface extractors: SKILL/AGENTS/CLAUDE.md, JSON/YAML prompt keys, fenced blocks.
+- `promptguard audit-repo` with include/exclude globs.
+- SARIF 2.1.0 report format (`--format sarif`).
+- Grounded fix drafts (preserve original wording + contract checklist).
+- Accept-risk trail: `--accept-risk ID:reason`, `--apply-accepted`.
+- Security pack rules PG016–PG018 + `eval/security_cases.jsonl`.
+- Skill scripts delegate to package CLI for flag parity.
+
 ## 0.1.0
 
 - Initial CLI: `promptguard audit`.

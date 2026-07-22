@@ -95,6 +95,31 @@ Saved reports go to:
 .promptguard/reports.jsonl
 ```
 
+## Profiles, CI, and severity gates
+
+```bash
+# Coding-agent responsibility contracts only; fail CI on high+
+promptguard audit task.md --profile coding-agent --fail-on high
+
+# System / policy prompts
+promptguard audit system.md --profile system --fail-on high
+
+# Static security heuristics (PG016+)
+promptguard audit agent.md --profile security --fail-on high
+
+# Whole repo → SARIF for code scanning style review
+promptguard audit-repo . --profile coding-agent --fail-on high --format sarif
+
+# Intentional override trail
+promptguard audit task.md --accept-risk PG012:deadline --apply-accepted --fail-on high
+```
+
+Profiles: `general` (default, all core rules), `coding-agent`, `system`, `security`.
+
+`--fail-on` omitted keeps legacy behavior (any finding → exit 1). Use `--fail-on none` to always exit 0 after printing the report.
+
+Out of scope for this release: interactive TUI, default LLM judge, runtime chat rails / red-team harnesses.
+
 ## Agent-Native Guard
 
 Install adapters:

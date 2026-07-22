@@ -9,6 +9,20 @@ dist/
 build/
 *.egg-info/
 .promptguard/
+.cache/
+
+# Local agent/planning harness — never publish to the OSS product remote.
+.izon-consule/
+goal/
+goal.md
+plan.md
+.ai/
+
+# Local research dossiers / deep-research notes — keep off the product remote.
+docs/RESEARCH*.md
+docs/research/
+**/RESEARCH-*.md
+docs/**/research*.md
 
 # Local/private working notes; do not publish in the OSS repo.
 notes.md

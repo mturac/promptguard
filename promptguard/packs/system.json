@@ -1,0 +1,5 @@
+{
+  "name": "system",
+  "description": "Safety, conflict, tool schema, override, and certainty for system prompts.",
+  "rule_ids": ["PG001", "PG002", "PG003", "PG004", "PG006", "PG008", "PG009", "PG010"]
+}

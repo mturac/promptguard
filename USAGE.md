@@ -38,6 +38,58 @@ Audit pasted text:
 printf '%s' 'Fix this bug and write code.' | python3 -m promptguard audit - --format markdown
 ```
 
+### Profiles
+
+| Profile | Use when |
+| --- | --- |
+| `general` | Default — full core catalog (PG001–PG015) |
+| `coding-agent` | Agent coding tasks — PG011/PG012/PG015 (+ related) |
+| `system` | System/router/policy prompts — safety, tool, override |
+| `security` | Static injection / exfil heuristics — PG016–PG018 |
+
+```bash
+promptguard audit task.md --profile coding-agent --fail-on high
+promptguard audit system.md --profile system
+promptguard audit agent.md --profile security --fail-on high
+```
+
+### Severity gate (`--fail-on`)
+
+Order: `critical` > `high` > `medium` > `low` > `info`.
+
+| Flag | Exit behavior |
+| --- | --- |
+| omitted | Legacy: any finding → exit 1 |
+| `--fail-on high` | Exit 1 only if severity ≥ high |
+| `--fail-on none` | Always exit 0 (report still prints) |
+
+### Repo audit and SARIF
+
+```bash
+promptguard audit-repo .
+promptguard audit-repo . --profile coding-agent --fail-on high --format sarif
+promptguard audit-repo . --include '*.md' --exclude 'docs/**'
+```
+
+Formats: `markdown`, `json`, `table`, `csv`, `sarif`.
+
+### Accept risk
+
+```bash
+promptguard audit task.md --accept-risk PG012:ship-window --fail-on none
+promptguard audit task.md --apply-accepted --fail-on high
+```
+
+Records append to `.promptguard/accepted-risks.jsonl` (rule id + source path). Empty reason is rejected.
+
+### Custom rules
+
+```bash
+promptguard audit task.md --rules ./my-rules.json --profile coding-agent
+```
+
+`--rules` loads a JSON array (or `{ "rules": [...] }`). The active profile still filters by enabled rule ids.
+
 Save a JSONL report:
 
 ```bash
@@ -66,7 +118,7 @@ PromptGuard returns:
 - missing/conflicting contract
 - clarification questions
 - approval criteria
-- fix draft
+- grounded fix draft (includes original wording)
 
 ## Install Agent Adapters
 
@@ -79,7 +131,7 @@ PromptGuard returns:
 
 Restart the agent after install.
 
-The adapter install copies the self-contained skill bundle into each agent config/workspace directory. The agent can use the bundled audit scripts even if the `promptguard` CLI is not globally installed.
+The adapter install copies the skill bundle into each agent config/workspace directory. Skill scripts prefer the installed `promptguard` package for profiles, fail-on, SARIF, and accept-risk parity.
 
 OpenClaw also installs a local plugin that registers `before_tool_call`. That plugin blocks `write`/`edit` tool calls when prompt-like content has unresolved PromptGuard findings.
 
@@ -140,4 +192,13 @@ PG004 weak tool/function schema
 PG005 missing output contract
 PG012 missing responsibility contract
 PG015 missing technical risk contract
+PG016 instruction-override without dual-control
+PG017 system prompt disclosure risk
+PG018 secret/tool exfiltration instructions
 ```
+
+## Out of scope
+
+- Interactive TUI (see `docs/TUI.md` concept only)
+- Default LLM-as-judge pass
+- Runtime chat rails / red-team attack generation

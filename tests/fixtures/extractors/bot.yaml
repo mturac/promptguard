@@ -1,0 +1,6 @@
+name: bot
+system: |
+  You are system.
+  Stay on topic.
+prompt: "short prompt"
+other: ignore
