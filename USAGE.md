@@ -90,6 +90,30 @@ promptguard audit task.md --rules ./my-rules.json --profile coding-agent
 
 `--rules` loads a JSON array (or `{ "rules": [...] }`). The active profile still filters by enabled rule ids.
 
+Optional match fields (in addition to classic `any` / `also_any` / `missing_*`):
+
+| Field | Semantics |
+| --- | --- |
+| `word_any`, `word_also_any`, `word_missing_any` | Unicode word-boundary match |
+| `regex_any`, `regex_also_any`, `regex_missing_any` | `re.search` (invalid patterns fail closed) |
+
+### Baseline regression
+
+```bash
+promptguard audit task.md --save
+promptguard audit task.md --baseline .promptguard/reports.jsonl --fail-on-new
+```
+
+Prints new / fixed / unchanged. `--fail-on-new` exits 1 only when **new** findings appear.
+
+### Promptfoo export
+
+```bash
+promptguard export-promptfoo eval/cases.jsonl -o promptfooconfig.yaml
+```
+
+Skeleton only (stdlib YAML writer) — wire providers and real asserts yourself.
+
 Save a JSONL report:
 
 ```bash

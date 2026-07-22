@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0
+
+- Baseline regression: `--baseline PATH` and `--fail-on-new` on audit/audit-repo.
+- Match modes: `word_any` / `word_also_any` / `word_missing_any` and `regex_*` rule fields.
+- `promptguard export-promptfoo` converts eval JSONL to a promptfoo YAML skeleton.
+- Classic substring rule fields remain backward compatible.
+
 ## 0.2.0
 
 - Profiles: `general`, `coding-agent`, `system`, `security` (`--profile`).

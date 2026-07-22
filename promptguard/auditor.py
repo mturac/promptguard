@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from importlib.resources import files
 from pathlib import Path
 from typing import Any
@@ -75,6 +76,8 @@ def _grounded_fix_draft(rule: dict[str, Any], content: str, *, max_chars: int = 
 def _matches(rule: dict[str, Any], text: str, original: str) -> bool:
     if "min_chars" in rule and len(original) < int(rule["min_chars"]):
         return False
+
+    # Classic substring fields (0.2.x semantics)
     if "any" in rule and not _has_any(text, rule["any"]):
         return False
     if "also_any" in rule and not _has_any(text, rule["also_any"]):
@@ -83,6 +86,23 @@ def _matches(rule: dict[str, Any], text: str, original: str) -> bool:
         return False
     if "missing_groups" in rule and all(_has_any(text, group) for group in rule["missing_groups"]):
         return False
+
+    # Word-boundary fields
+    if "word_any" in rule and not _has_word_any(text, rule["word_any"]):
+        return False
+    if "word_also_any" in rule and not _has_word_any(text, rule["word_also_any"]):
+        return False
+    if "word_missing_any" in rule and _has_word_any(text, rule["word_missing_any"]):
+        return False
+
+    # Regex fields (fail closed on bad patterns: treated as non-match for positive keys)
+    if "regex_any" in rule and not _has_regex_any(text, rule["regex_any"]):
+        return False
+    if "regex_also_any" in rule and not _has_regex_any(text, rule["regex_also_any"]):
+        return False
+    if "regex_missing_any" in rule and _has_regex_any(text, rule["regex_missing_any"]):
+        return False
+
     return True
 
 
@@ -90,14 +110,49 @@ def _has_any(text: str, terms: list[str]) -> bool:
     return any(_norm(term) in text for term in terms)
 
 
+def _has_word_any(text: str, terms: list[str]) -> bool:
+    for term in terms:
+        token = _norm(term)
+        if not token:
+            continue
+        pattern = r"(?<!\w)" + re.escape(token) + r"(?!\w)"
+        if re.search(pattern, text, flags=re.UNICODE):
+            return True
+    return False
+
+
+def _has_regex_any(text: str, patterns: list[str]) -> bool:
+    for pattern in patterns:
+        try:
+            if re.search(pattern, text, flags=re.IGNORECASE | re.UNICODE):
+                return True
+        except re.error:
+            continue
+    return False
+
+
 def _evidence(rule: dict[str, Any], content: str) -> str:
-    terms = rule.get("any", []) + rule.get("also_any", [])
+    terms = (
+        list(rule.get("any", []))
+        + list(rule.get("also_any", []))
+        + list(rule.get("word_any", []))
+        + list(rule.get("word_also_any", []))
+    )
     lower = content.lower()
     for term in terms:
         idx = lower.find(term.lower())
         if idx >= 0:
             start = max(0, idx - 80)
             end = min(len(content), idx + 160)
+            return " ".join(content[start:end].split())
+    for pattern in list(rule.get("regex_any", [])) + list(rule.get("regex_also_any", [])):
+        try:
+            m = re.search(pattern, content, flags=re.IGNORECASE | re.UNICODE)
+        except re.error:
+            continue
+        if m:
+            start = max(0, m.start() - 80)
+            end = min(len(content), m.end() + 160)
             return " ".join(content[start:end].split())
     return "Rule matched by absence or length."
 

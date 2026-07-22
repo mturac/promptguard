@@ -118,6 +118,16 @@ Profiles: `general` (default, all core rules), `coding-agent`, `system`, `securi
 
 `--fail-on` omitted keeps legacy behavior (any finding → exit 1). Use `--fail-on none` to always exit 0 after printing the report.
 
+Baseline regression and promptfoo bridge:
+
+```bash
+promptguard audit task.md --profile coding-agent --save
+promptguard audit task.md --profile coding-agent --baseline .promptguard/reports.jsonl --fail-on-new
+promptguard export-promptfoo eval/cases.jsonl -o promptfooconfig.yaml
+```
+
+Rule packs may use `word_any` / `regex_any` fields for tighter matching; classic `any` substring fields stay compatible.
+
 Out of scope for this release: interactive TUI, default LLM judge, runtime chat rails / red-team harnesses.
 
 ## Agent-Native Guard
