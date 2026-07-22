@@ -1,0 +1,6 @@
+{
+  "name": "security",
+  "description": "Static security heuristics (PG016+).",
+  "rule_ids": ["PG016", "PG017", "PG018"],
+  "extra_rules": "security_rules.json"
+}

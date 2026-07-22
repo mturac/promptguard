@@ -5,7 +5,14 @@ import json
 import sys
 from pathlib import Path
 
-from audit_prompt import Prompt, audit, render
+
+def _bootstrap() -> None:
+    here = Path(__file__).resolve()
+    # skills/promptguard/scripts → repo root is parents[3]
+    repo_root = here.parents[3] if len(here.parents) >= 4 else here.parent
+    if (repo_root / "promptguard").is_dir() and str(repo_root) not in sys.path:
+        sys.path.insert(0, str(repo_root))
+
 
 TRIGGERS = (
     "prompt",
@@ -31,10 +38,12 @@ PROMPT_FILE_HINTS = (
     "system",
     "claude.md",
     "agents.md",
+    "skill.md",
 )
 
 
 def main() -> int:
+    _bootstrap()
     try:
         payload = json.load(sys.stdin)
     except json.JSONDecodeError:
@@ -53,13 +62,21 @@ def on_user_prompt(payload: dict) -> int:
     if not is_prompt_related(prompt):
         return 0
 
-    findings = audit([Prompt("user_message", prompt, "UserPromptSubmit", None)])
+    from promptguard.auditor import audit_prompts
+    from promptguard.models import PromptInput
+    from promptguard.report import render_report
+
+    report = audit_prompts(
+        [PromptInput("user_message", prompt, "UserPromptSubmit", None)],
+        source="UserPromptSubmit",
+        profile="coding-agent",
+    )
     context = [
-        "PromptGuard active: treat any prompt/system prompt in this request as a contract audit target.",
+        "PromptGuard active (profile=coding-agent): treat prompt/system prompt as contract audit targets.",
         "When relevant, report: Severity | Evidence | Impact | Missing/Conflicting Contract | Fix Draft.",
     ]
-    if findings:
-        context.append(render(findings, "table", Path("UserPromptSubmit"), 1))
+    if report.findings:
+        context.append(render_report(report, "table"))
 
     print(
         json.dumps(
@@ -89,10 +106,13 @@ def on_post_tool(payload: dict) -> int:
     if not should_audit_file(path) or not path.exists():
         return 0
 
-    from audit_prompt import extract_prompts
+    from promptguard.auditor import audit_prompts
+    from promptguard.extractors import extract_prompts
+    from promptguard.report import render_report
 
-    findings = audit(extract_prompts(path))
-    if not findings:
+    prompts = extract_prompts(path)
+    report = audit_prompts(prompts, source=str(path), profile="coding-agent")
+    if not report.findings:
         return 0
 
     print(
@@ -100,8 +120,10 @@ def on_post_tool(payload: dict) -> int:
             {
                 "hookSpecificOutput": {
                     "hookEventName": "PostToolUse",
-                    "additionalContext": "PromptGuard findings after prompt-like file edit:\n\n"
-                    + render(findings, "table", path, 1),
+                    "additionalContext": (
+                        "PromptGuard findings after write (profile=coding-agent, fail-on high recommended):\n\n"
+                        + render_report(report, "table")
+                    ),
                 }
             },
             ensure_ascii=False,
@@ -111,17 +133,20 @@ def on_post_tool(payload: dict) -> int:
 
 
 def is_prompt_related(text: str) -> bool:
-    low = text.lower()
-    return any(trigger in low for trigger in TRIGGERS)
+    lowered = text.lower()
+    return any(t in lowered for t in TRIGGERS)
 
 
 def should_audit_file(path: Path) -> bool:
-    low = str(path).lower()
-    if any(part in low for part in ("/node_modules/", "/dist/", "/build/", "/.next/", "/coverage/")):
-        return False
-    return path.suffix in {".md", ".txt", ".py", ".json", ".yaml", ".yml"} and any(
-        hint in low for hint in PROMPT_FILE_HINTS
-    )
+    name = path.name.lower()
+    return any(h in name for h in PROMPT_FILE_HINTS) or path.suffix.lower() in {
+        ".md",
+        ".prompt",
+        ".txt",
+        ".yaml",
+        ".yml",
+        ".json",
+    }
 
 
 if __name__ == "__main__":

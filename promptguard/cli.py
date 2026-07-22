@@ -10,11 +10,13 @@ from .auditor import audit_prompts
 from .baseline import diff_findings, load_baseline_findings, render_baseline_diff
 from .export_promptfoo import export_promptfoo_yaml
 from .extractors import extract_prompts
+from .judge import JudgeError, annotate_findings_with_judge
 from .models import AuditReport
 from .packs import FAIL_ON_LEVELS, PackError, exit_code_for_findings, list_profiles, resolve_rules
 from .repo import extract_repo_prompts
 from .report import render_report
 from .store import save_report
+from .tui import run_tui
 
 FORMATS = ["markdown", "json", "table", "csv", "sarif"]
 
@@ -49,6 +51,11 @@ def _add_shared_audit_flags(parser: argparse.ArgumentParser) -> None:
         help="with --baseline, exit 1 if any new finding appears",
     )
     parser.add_argument(
+        "--judge",
+        action="store_true",
+        help="opt-in LLM second pass via turac-llm-router (TURAC_LLM_ROUTER_URL/KEY)",
+    )
+    parser.add_argument(
         "--accept-risk",
         action="append",
         default=[],
@@ -64,38 +71,51 @@ def _add_shared_audit_flags(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--save", action="store_true", help="append report to .promptguard/reports.jsonl")
 
 
-def _run_audit_flow(args: argparse.Namespace) -> int:
-    try:
-        rules = resolve_rules(profile=args.profile, rules_path=args.rules)
-    except PackError as exc:
-        print(f"promptguard: {exc}", file=sys.stderr)
-        return 2
-
-    if args.command == "audit":
+def _build_report(args: argparse.Namespace) -> tuple[AuditReport, str]:
+    rules = resolve_rules(profile=args.profile, rules_path=args.rules)
+    if args.command in {"audit", "tui"}:
         prompts = extract_prompts(args.path)
         source = str(args.path)
     else:
-        root = args.root if args.root is not None else Path(".")
-        prompts = extract_repo_prompts(root, include=args.include or None, exclude=args.exclude or None)
+        root = args.root if getattr(args, "root", None) is not None else Path(".")
+        include = getattr(args, "include", None) or None
+        exclude = getattr(args, "exclude", None) or None
+        prompts = extract_repo_prompts(root, include=include, exclude=exclude)
         source = str(root)
 
     report = audit_prompts(prompts, source=source, rules=rules)
 
-    if args.accept_risk:
-        try:
-            append_acceptances(args.accept_risk, source=source)
-        except AcceptRiskError as exc:
-            print(f"promptguard: {exc}", file=sys.stderr)
-            return 2
+    if getattr(args, "accept_risk", None):
+        append_acceptances(args.accept_risk, source=source)
 
     findings = report.findings
-    if args.apply_accepted:
+    if getattr(args, "apply_accepted", False):
         findings = filter_accepted_findings(findings)
-        report = AuditReport.create(
-            source=report.source,
-            prompts_checked=report.prompts_checked,
-            findings=findings,
-        )
+
+    if getattr(args, "judge", False):
+        excerpt = "\n\n".join(p.content for p in prompts)[:4000]
+        findings = annotate_findings_with_judge(findings, prompt_excerpt=excerpt)
+
+    report = AuditReport.create(
+        source=report.source,
+        prompts_checked=report.prompts_checked,
+        findings=findings,
+    )
+    return report, source
+
+
+def _run_audit_flow(args: argparse.Namespace) -> int:
+    try:
+        report, _source = _build_report(args)
+    except PackError as exc:
+        print(f"promptguard: {exc}", file=sys.stderr)
+        return 2
+    except AcceptRiskError as exc:
+        print(f"promptguard: {exc}", file=sys.stderr)
+        return 2
+    except JudgeError as exc:
+        print(f"promptguard: {exc}", file=sys.stderr)
+        return 2
 
     print(render_report(report, args.format))
 
@@ -141,6 +161,13 @@ def main(argv: list[str] | None = None) -> int:
     repo.add_argument("--exclude", action="append", default=[], help="glob exclude (repeatable)")
     _add_shared_audit_flags(repo)
 
+    tui = subparsers.add_parser("tui", help="interactive finding review (minimal TUI)")
+    tui.add_argument("path", type=Path, help="file path or - for stdin")
+    tui.add_argument("--profile", default="coding-agent", help="rule pack profile")
+    tui.add_argument("--rules", type=Path, default=None)
+    tui.add_argument("--apply-accepted", action="store_true")
+    tui.add_argument("--judge", action="store_true")
+
     exp = subparsers.add_parser(
         "export-promptfoo",
         help="export eval JSONL to a promptfoo YAML skeleton",
@@ -152,6 +179,18 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command in {"audit", "audit-repo"}:
         return _run_audit_flow(args)
+
+    if args.command == "tui":
+        # Normalize namespace for _build_report
+        args.accept_risk = []
+        args.apply_accepted = bool(args.apply_accepted)
+        args.judge = bool(args.judge)
+        try:
+            report, _ = _build_report(args)
+        except (PackError, JudgeError) as exc:
+            print(f"promptguard: {exc}", file=sys.stderr)
+            return 2
+        return run_tui(report)
 
     if args.command == "export-promptfoo":
         try:

@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 
 function definePluginEntry(factory) {
   return factory;
@@ -45,6 +45,14 @@ const CONTENT_KEYS = new Set([
   "value",
 ]);
 
+const SEVERITY_RANK = {
+  critical: 5,
+  high: 4,
+  medium: 3,
+  low: 2,
+  info: 1,
+};
+
 function norm(value) {
   return String(value ?? "").toLowerCase().replaceAll("ı", "i");
 }
@@ -71,12 +79,67 @@ function collectContent(value, parentKey = "", out = []) {
   return out;
 }
 
+function resolveSkillDirs() {
+  return [
+    join(homedir(), ".openclaw", "workspace", "skills", "promptguard"),
+    join(homedir(), ".openclaw", "skills", "promptguard"),
+  ].filter((path) => existsSync(path));
+}
+
 function resolveRulesPath() {
-  const candidates = [
-    join(homedir(), ".openclaw", "workspace", "skills", "promptguard", "references", "rules.json"),
-    join(homedir(), ".openclaw", "skills", "promptguard", "references", "rules.json"),
-  ];
-  return candidates.find((path) => existsSync(path));
+  for (const dir of resolveSkillDirs()) {
+    const candidate = join(dir, "references", "rules.json");
+    if (existsSync(candidate)) return candidate;
+  }
+  return undefined;
+}
+
+function loadJson(path) {
+  return JSON.parse(readFileSync(path, "utf8"));
+}
+
+function resolveActiveRules(rulesPath) {
+  const profile = process.env.PROMPTGUARD_PROFILE || "coding-agent";
+  let rules = loadJson(rulesPath);
+  if (!Array.isArray(rules)) rules = [];
+
+  const skillDir = dirname(dirname(rulesPath));
+  const packPath = join(skillDir, "references", "packs", `${profile}.json`);
+  if (!existsSync(packPath)) {
+    // unknown pack → use full catalog (general-like)
+    return rules;
+  }
+  const pack = loadJson(packPath);
+  if (pack.extra_rules) {
+    const extraPath = join(skillDir, "references", "packs", pack.extra_rules);
+    if (existsSync(extraPath)) {
+      const extra = loadJson(extraPath);
+      if (Array.isArray(extra)) {
+        const byId = new Map(rules.map((r) => [r.id, r]));
+        for (const rule of extra) byId.set(rule.id, rule);
+        rules = [...byId.values()];
+      }
+    }
+  }
+  if (Array.isArray(pack.rule_ids)) {
+    const allowed = new Set(pack.rule_ids);
+    rules = rules.filter((r) => allowed.has(r.id));
+  }
+  // rule_ids null → all rules (general)
+  return rules;
+}
+
+function failOnRank() {
+  const failOn = (process.env.PROMPTGUARD_FAIL_ON || "high").toLowerCase();
+  if (failOn === "none") return Infinity; // never block by severity
+  return SEVERITY_RANK[failOn] ?? SEVERITY_RANK.high;
+}
+
+function isBlocking(finding) {
+  const threshold = failOnRank();
+  if (!Number.isFinite(threshold)) return false;
+  const rank = SEVERITY_RANK[norm(finding.severity)] ?? 0;
+  return rank >= threshold;
 }
 
 function truncate(text, max = 3500) {
@@ -106,34 +169,42 @@ function matches(rule, text, original) {
 function evidence(rule, content) {
   for (const term of [...(rule.any ?? []), ...(rule.also_any ?? [])]) {
     const idx = content.toLowerCase().indexOf(term.toLowerCase());
-    if (idx >= 0) return content.slice(Math.max(0, idx - 80), Math.min(content.length, idx + 160)).replace(/\s+/g, " ");
+    if (idx >= 0) {
+      return content
+        .slice(Math.max(0, idx - 80), Math.min(content.length, idx + 160))
+        .replace(/\s+/g, " ");
+    }
   }
   return "Rule matched by absence.";
 }
 
-function auditText(rulesPath, content) {
-  const rules = JSON.parse(readFileSync(rulesPath, "utf8"));
+function auditText(rules, content) {
   const text = norm(content);
-  return rules.filter((rule) => matches(rule, text, content)).map((rule) => ({
-    id: rule.id,
-    severity: rule.severity,
-    category: rule.category,
-    title: rule.title,
-    evidence: evidence(rule, content),
-    impact: rule.impact,
-    contract: rule.contract,
-    fix: rule.fix_draft,
-    ask: (rule.clarifying_questions ?? []).join(" | ") || "No clarification needed; apply the contract fix.",
-    approval: rule.approval_contract || "Approve only when the missing contract is explicit enough to verify.",
-  }));
+  return rules
+    .filter((rule) => matches(rule, text, content))
+    .map((rule) => ({
+      id: rule.id,
+      severity: rule.severity,
+      category: rule.category,
+      title: rule.title,
+      evidence: evidence(rule, content),
+      impact: rule.impact,
+      contract: rule.contract,
+      fix: rule.fix_draft,
+      ask: (rule.clarifying_questions ?? []).join(" | ") || "No clarification needed; apply the contract fix.",
+      approval: rule.approval_contract || "Approve only when the missing contract is explicit enough to verify.",
+    }));
 }
 
-function renderMarkdown(findings) {
+function renderMarkdown(findings, meta = {}) {
   const lines = [
     "# PromptGuard Audit",
     "",
     "Source: OpenClaw before_tool_call",
+    `Profile: ${meta.profile || "coding-agent"}`,
+    `Fail-on: ${meta.failOn || "high"}`,
     `Findings: ${findings.length}`,
+    `Blocking: ${findings.filter(isBlocking).length}`,
   ];
   for (const finding of findings) {
     lines.push(
@@ -169,11 +240,17 @@ export default definePluginEntry((api = {}) => {
       const content = collectContent(event?.params).join("\n\n---\n\n").trim();
       if (!content) return;
 
-      const findings = auditText(rulesPath, content);
-      if (findings.length === 0) return;
+      const profile = process.env.PROMPTGUARD_PROFILE || "coding-agent";
+      const failOn = process.env.PROMPTGUARD_FAIL_ON || "high";
+      const rules = resolveActiveRules(rulesPath);
+      const findings = auditText(rules, content);
+      const blocking = findings.filter(isBlocking);
+      if (blocking.length === 0) return;
 
-      const output = renderMarkdown(findings);
-      api.logger?.warn?.(`promptguard blocked ${event?.toolName}: ${findings.length} finding(s)`);
+      const output = renderMarkdown(findings, { profile, failOn });
+      api.logger?.warn?.(
+        `promptguard blocked ${event?.toolName}: ${blocking.length} blocking / ${findings.length} total (profile=${profile} fail-on=${failOn})`,
+      );
       return {
         block: true,
         blockReason:

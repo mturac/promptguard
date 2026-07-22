@@ -114,6 +114,34 @@ promptguard export-promptfoo eval/cases.jsonl -o promptfooconfig.yaml
 
 Skeleton only (stdlib YAML writer) — wire providers and real asserts yourself.
 
+### TUI
+
+```bash
+promptguard tui task.md --profile coding-agent
+```
+
+Interactive when TTY: `j`/`k` move, `f` fix draft, `a` accept risk, `s` save, `q` quit.  
+Non-TTY (CI/pipes): table dump; exit 1 if high+ findings.
+
+### Opt-in LLM judge
+
+```bash
+export TURAC_LLM_ROUTER_URL=http://localhost:8000
+export TURAC_LLM_ROUTER_KEY=your-key
+promptguard audit task.md --judge --profile coding-agent --fail-on high
+```
+
+Default audit path stays offline. Judge failures exit 2.
+
+### OpenClaw profile/fail-on
+
+```bash
+export PROMPTGUARD_PROFILE=coding-agent   # or system|security|general
+export PROMPTGUARD_FAIL_ON=high           # or critical|medium|low|info|none
+```
+
+Only findings at or above fail-on severity block writes.
+
 Save a JSONL report:
 
 ```bash

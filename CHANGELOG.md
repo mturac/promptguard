@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0
+
+- OpenClaw plugin: `PROMPTGUARD_PROFILE` (default `coding-agent`) and `PROMPTGUARD_FAIL_ON` (default `high`); pack-aware rule filter.
+- Skill pack metadata under `skills/promptguard/references/packs/`.
+- Claude hook script uses package auditor with coding-agent profile.
+- `promptguard tui PATH` minimal interactive review (non-TTY table fallback).
+- Opt-in `--judge` second pass via turac-llm-router (`TURAC_LLM_ROUTER_URL` / `TURAC_LLM_ROUTER_KEY`).
+
 ## 0.3.0
 
 - Baseline regression: `--baseline PATH` and `--fail-on-new` on audit/audit-repo.

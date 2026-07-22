@@ -1,0 +1,5 @@
+{
+  "name": "coding-agent",
+  "description": "Responsibility, task scope, technical risk for coding agents.",
+  "rule_ids": ["PG005", "PG007", "PG011", "PG012", "PG015"]
+}
