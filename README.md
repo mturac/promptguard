@@ -1,10 +1,14 @@
 <p align="center">
-  <img src="docs/assets/promptguard.png" alt="PromptGuard" width="640">
+  <img src="docs/assets/promptguard.png" alt="PromptGuard" width="560">
 </p>
 
 <p align="center">
   <strong>Prompt contracts for agent workflows.</strong><br>
   <em>Offline · deterministic · zero dependencies</em>
+</p>
+
+<p align="center">
+  <img src="docs/assets/hero-contract.jpg" alt="Contract gate" width="88%">
 </p>
 
 ---
@@ -53,8 +57,6 @@ No model calls. No network. Safe in hooks and air-gapped machines.
 
 ## Profiles
 
-Use the pack that matches the work:
-
 ```bash
 promptguard audit task.md   --profile coding-agent --fail-on high
 promptguard audit system.md --profile system       --fail-on high
@@ -68,7 +70,7 @@ promptguard audit agent.md  --profile security     --fail-on high
 | `security` | Instruction hardening — override and exfil patterns |
 | `general` | Full core catalog (default) |
 
-`--fail-on high` fails only on high or critical. Omit it to fail on any finding (legacy). Use `--fail-on none` to report without failing.
+`--fail-on high` fails only on high or critical. Omit it to fail on any finding. Use `--fail-on none` to report without failing.
 
 ---
 
@@ -79,9 +81,7 @@ promptguard audit-repo . --profile coding-agent --fail-on high --format sarif
 promptguard audit task.md --baseline .promptguard/reports.jsonl --fail-on-new
 ```
 
-Walk a tree of prompt-like files, export SARIF, or gate on **new** findings only. Reports can be saved to `.promptguard/reports.jsonl`.
-
-Intentional exceptions:
+Walk prompt-like files, export SARIF, or gate on **new** findings only. Save history with `--save` → `.promptguard/reports.jsonl`.
 
 ```bash
 promptguard audit task.md --accept-risk PG012:deadline --apply-accepted
@@ -89,12 +89,14 @@ promptguard audit task.md --accept-risk PG012:deadline --apply-accepted
 
 ---
 
+<p align="center">
+  <img src="docs/assets/hero-agents.jpg" alt="Agents into audit lattice" width="88%">
+</p>
+
 ## Agents
 
-Same contract gate across popular coding agents:
-
 ```bash
-./install-agent-adapters.sh hermes    # active Hermes profile + pre_tool_call plugin
+./install-agent-adapters.sh hermes
 ./install-agent-adapters.sh claude
 ./install-agent-adapters.sh codex
 ./install-agent-adapters.sh opencode
@@ -116,6 +118,16 @@ export PROMPTGUARD_FAIL_ON=high
 | **Claude** | Skill + `CLAUDE.md` · optional hook |
 | **Codex / OpenCode** | Skill + `AGENTS.md` |
 
+### Hermes
+
+```bash
+./install-agent-adapters.sh hermes
+# or skill only from this repo:
+hermes skills install mturac/promptguard/skills/promptguard
+```
+
+Uses the active profile home from `hermes config path`. Chat: `/promptguard`. Plugin blocks prompt-like `write_file` / `patch` / `edit`. Off: `PROMPTGUARD_HERMES_DISABLE=1`.
+
 ---
 
 ## Review
@@ -124,7 +136,7 @@ export PROMPTGUARD_FAIL_ON=high
 promptguard tui task.md --profile coding-agent
 ```
 
-Navigate findings, open a fix draft, record accept-risk, save. In non-interactive environments it prints a table and exits non-zero on high+ findings.
+Navigate findings, open a fix draft, record accept-risk, save. Non-interactive environments get a table and a non-zero exit on high+ findings.
 
 ---
 
@@ -136,7 +148,7 @@ Navigate findings, open a fix draft, record accept-risk, save. In non-interactiv
 Prod auth patlıyor, refresh’te kullanıcı düşüyor. Hızlıca fixler misin, akşama deploy.
 ```
 
-→ typically `PG012` (responsibility) and `PG015` (technical risk).
+→ typically `PG012` and `PG015`.
 
 **Contracted**
 
@@ -156,10 +168,10 @@ Return changed files, root cause, verification output, and residual risk.
 | `PG012` | Coding without ownership / surface / verification |
 | `PG015` | Technical change without risk / rollback / tests |
 | `PG008` | Later exception weakens an earlier hard boundary |
-| `PG004` | Tool / function call without a real schema |
-| `PG016–018` | Security pack: override, system-prompt leak, exfil |
+| `PG004` | Tool call without a real schema |
+| `PG016–018` | Security pack: override, leak, exfil |
 
-Full list and eval fixtures: [`eval/`](eval/) · details: [USAGE.md](USAGE.md)
+Full catalog and fixtures: [`eval/`](eval/) · [USAGE.md](USAGE.md)
 
 ---
 
@@ -169,7 +181,7 @@ Full list and eval fixtures: [`eval/`](eval/) · details: [USAGE.md](USAGE.md)
 python3 -m pytest -q
 ```
 
-Further reading: [USAGE.md](USAGE.md) · [EXAMPLES.md](EXAMPLES.md) · [CHANGELOG.md](CHANGELOG.md)
+[USAGE.md](USAGE.md) · [EXAMPLES.md](EXAMPLES.md) · [CHANGELOG.md](CHANGELOG.md)
 
 ---
 
