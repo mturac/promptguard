@@ -148,37 +148,51 @@ Out of scope: default (non-opt-in) LLM judge, full curses two-pane polish, runti
 
 ## Agent-Native Guard
 
-Install adapters:
+Popular coding agents (Hermes, Claude Code, Codex, OpenCode, OpenClaw) get the same pre-write contract gate.
 
 ```bash
-./install-agent-adapters.sh codex
+# One agent
+./install-agent-adapters.sh hermes    # Nous Research Hermes Agent (skills + pre_tool_call plugin)
 ./install-agent-adapters.sh claude
+./install-agent-adapters.sh codex
 ./install-agent-adapters.sh opencode
 ./install-agent-adapters.sh openclaw
-./install-agent-adapters.sh hermes
+
+# Or everything
+./install-agent-adapters.sh all
 ```
 
-Restart the agent after install.
+Restart the agent / gateway after install.
+
+**Hermes (recommended for Hermes users):**
+
+```bash
+./install-agent-adapters.sh hermes
+# Uses active profile home from `hermes config path` (e.g. ~/.hermes or ~/.serhatagent)
+export PROMPTGUARD_PROFILE=coding-agent
+export PROMPTGUARD_FAIL_ON=high
+# In chat: /promptguard   ·  plugin blocks prompt-like write_file/patch/edit
+```
 
 Behavior:
 
 - prompt-like edits are audited before writing
-- high/critical findings block write until explicit approval
-- Codex/OpenCode get global `AGENTS.md` rules
-- OpenClaw gets workspace `AGENTS.md` plus a `before_tool_call` plugin that blocks unsafe prompt writes
-- Hermes gets `~/.hermes/skills/promptguard`, a `pre_tool_call` plugin, optional shell hook, and AGENTS.md block
-- Claude gets `CLAUDE.md`, optional hook config, and `/prompt-audit`
-- The adapters copy the self-contained `skills/promptguard` bundle into each agent config/workspace directory, so the guard can run without a separate global CLI install.
+- high/critical findings block write until explicit approval (profile/fail-on aware)
+- Hermes: skill under `$HERMES_HOME/skills/promptguard` + `plugins/promptguard` (`pre_tool_call`) + AGENTS.md
+- OpenClaw: workspace skill + `before_tool_call` plugin
+- Claude: `CLAUDE.md` + optional hook + `/prompt-audit`
+- Codex / OpenCode: global `AGENTS.md` + skill scripts
+- Adapters copy the self-contained `skills/promptguard` bundle so the guard runs without a separate global CLI when scripts bootstrap the package
 
 Adapter status:
 
 | Agent | Install target | Automatic behavior |
 | --- | --- | --- |
+| **Hermes** | `$HERMES_HOME/skills/promptguard` + `plugins/promptguard` | Blocks prompt-like writes via `pre_tool_call`; skill as `/promptguard` |
+| OpenClaw | `~/.openclaw/workspace/skills/promptguard` + plugin | Blocks unsafe prompt writes with `before_tool_call` |
+| Claude | `~/.claude/skills/promptguard` + `CLAUDE.md` + optional hook | Hook can inject findings before the turn |
 | Codex | `~/.codex/skills/promptguard` + `~/.codex/AGENTS.md` | Audits prompt-like write requests before editing |
-| Claude | `~/.claude/skills/promptguard` + `CLAUDE.md` + optional hook | Hook can inject PromptGuard findings before the turn |
 | OpenCode | `~/.config/opencode/skills/promptguard` + `AGENTS.md` | Audits prompt-like write requests before editing |
-| OpenClaw | `~/.openclaw/workspace/skills/promptguard` + plugin | Blocks unsafe prompt `write`/`edit` tool calls with `before_tool_call` |
-| Hermes | `~/.hermes/skills/promptguard` + `plugins/promptguard` | Blocks prompt-like writes via `pre_tool_call` (profile/fail-on env) |
 
 ## Installable Skill
 

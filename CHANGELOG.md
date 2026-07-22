@@ -2,8 +2,10 @@
 
 ## 0.4.1
 
-- Hermes Agent adapter: skill install under `~/.hermes/skills/promptguard`,
-  `pre_tool_call` Python plugin, optional shell hook, and AGENTS.md block.
+- Hermes Agent adapter (first-class): skill + `pre_tool_call` plugin + shell hook + AGENTS.md.
+- Installer resolves **active Hermes profile** via `hermes config path` (not only `~/.hermes`).
+- Hermes skill frontmatter tags for Skills Hub / `/promptguard` discovery.
+- Docs: Hermes elevated alongside Claude/Codex/OpenClaw as a primary agent surface.
 - Installer: `./install-agent-adapters.sh hermes` (also included in `all`).
 
 ## 0.4.0

@@ -1,8 +1,16 @@
 ---
 name: promptguard
-description: Use when auditing system prompts, agent prompts, router prompts, tool/function-call prompts, or prompts that cause inconsistent, unsafe, malformed, or surprising LLM behavior.
+description: >
+  Audit system prompts, agent prompts, router prompts, tool/function-call prompts,
+  and coding-agent instructions as executable contracts. Use before writing or
+  seeding prompts; blocks vague "fix this / write code" tasks missing ownership
+  and verification. Works with Hermes, Claude Code, Codex, OpenCode, OpenClaw.
+version: 0.4.1
 metadata:
   short-description: Audit prompts as executable contracts
+  hermes:
+    tags: [prompt, safety, guardrails, agents, coding, contracts, pre-write]
+    category: devops
 ---
 
 # PromptGuard
@@ -69,7 +77,19 @@ Supported flags (shared with package CLI):
 - `--apply-accepted`
 - `--save`
 
-If this skill is installed into `$CODEX_HOME/skills/promptguard`, run the script from that installed path and ensure the `promptguard` package is importable.
+Installed skill script paths (first that exists):
+
+```bash
+# Hermes (active profile home; often ~/.hermes or ~/.serhatagent)
+python3 "$HERMES_HOME/skills/promptguard/scripts/audit_prompt.py" …
+python3 ~/.hermes/skills/promptguard/scripts/audit_prompt.py …
+# Codex / Claude / OpenCode
+python3 ~/.codex/skills/promptguard/scripts/audit_prompt.py …
+python3 ~/.claude/skills/promptguard/scripts/audit_prompt.py …
+python3 ~/.config/opencode/skills/promptguard/scripts/audit_prompt.py …
+```
+
+Prefer the installed `promptguard` package when importable (`pip install -e .` / pipx).
 
 Do not stop after discovering prompt files. Discovery is not completion. If a prompt-like file exists and the script exists, running the script is mandatory.
 
