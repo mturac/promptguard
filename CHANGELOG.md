@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.1
+
+- Hermes Agent adapter: skill install under `~/.hermes/skills/promptguard`,
+  `pre_tool_call` Python plugin, optional shell hook, and AGENTS.md block.
+- Installer: `./install-agent-adapters.sh hermes` (also included in `all`).
+
 ## 0.4.0
 
 - OpenClaw plugin: `PROMPTGUARD_PROFILE` (default `coding-agent`) and `PROMPTGUARD_FAIL_ON` (default `high`); pack-aware rule filter.

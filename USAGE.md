@@ -142,6 +142,22 @@ export PROMPTGUARD_FAIL_ON=high           # or critical|medium|low|info|none
 
 Only findings at or above fail-on severity block writes.
 
+### Hermes Agent
+
+```bash
+./install-agent-adapters.sh hermes
+# Installs:
+#   ~/.hermes/skills/promptguard
+#   ~/.hermes/plugins/promptguard  (pre_tool_call block)
+#   ~/.hermes/agent-hooks/pre_tool_promptguard.py
+#   AGENTS.md PromptGuard block
+export PROMPTGUARD_PROFILE=coding-agent
+export PROMPTGUARD_FAIL_ON=high
+# Restart hermes / gateway after install
+```
+
+Disable hard block: `PROMPTGUARD_HERMES_DISABLE=1`.
+
 Save a JSONL report:
 
 ```bash

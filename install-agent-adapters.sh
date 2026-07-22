@@ -99,11 +99,84 @@ install_openclaw() {
   fi
 }
 
+install_hermes() {
+  # Prefer active Hermes profile home (hermes config path → …/config.yaml).
+  local HERMES_HOME="${HERMES_HOME:-}"
+  if [[ -z "$HERMES_HOME" ]] && command -v hermes >/dev/null 2>&1; then
+    local cfg_path
+    cfg_path="$(hermes config path 2>/dev/null || true)"
+    if [[ -n "$cfg_path" && -f "$cfg_path" ]]; then
+      HERMES_HOME="$(cd "$(dirname "$cfg_path")" && pwd)"
+    fi
+  fi
+  HERMES_HOME="${HERMES_HOME:-$HOME/.hermes}"
+
+  mkdir -p "$HERMES_HOME/skills" "$HERMES_HOME/plugins" "$HERMES_HOME/agent-hooks"
+
+  # Skill (agentskills.io / Hermes skills dir)
+  rm -rf "$HERMES_HOME/skills/promptguard"
+  cp -R "$ROOT/skills/promptguard" "$HERMES_HOME/skills/promptguard"
+
+  # Python pre_tool_call plugin (CLI + gateway)
+  rm -rf "$HERMES_HOME/plugins/promptguard"
+  cp -R "$ROOT/adapters/hermes/plugin" "$HERMES_HOME/plugins/promptguard"
+
+  # Optional shell-hook script (manual config.yaml wiring)
+  cp "$ROOT/adapters/hermes/agent-hooks/pre_tool_promptguard.py" \
+    "$HERMES_HOME/agent-hooks/pre_tool_promptguard.py"
+  chmod +x "$HERMES_HOME/agent-hooks/pre_tool_promptguard.py"
+
+  # Workspace / home AGENTS.md instruction block
+  if [[ -f "$HERMES_HOME/workspace/AGENTS.md" ]]; then
+    install_block_prepend "$ROOT/adapters/hermes/AGENTS.md" "$HERMES_HOME/workspace/AGENTS.md" "PROMPTGUARD"
+  elif [[ -f "$HERMES_HOME/AGENTS.md" ]]; then
+    install_block_prepend "$ROOT/adapters/hermes/AGENTS.md" "$HERMES_HOME/AGENTS.md" "PROMPTGUARD"
+  else
+    mkdir -p "$HERMES_HOME"
+    install_block_prepend "$ROOT/adapters/hermes/AGENTS.md" "$HERMES_HOME/AGENTS.md" "PROMPTGUARD"
+  fi
+
+  if command -v hermes >/dev/null 2>&1; then
+    # Enable against the same profile home we just installed into
+    if HERMES_HOME="$HERMES_HOME" hermes plugins enable promptguard 2>/dev/null; then
+      :
+    else
+      # Fallback: append allow-list entry without rewriting whole config
+      python3 - "$HERMES_HOME/config.yaml" <<'PY'
+from pathlib import Path
+import sys
+cfg = Path(sys.argv[1])
+if not cfg.exists():
+    sys.exit(0)
+text = cfg.read_text(encoding="utf-8")
+if "promptguard" in text and "enabled:" in text:
+    sys.exit(0)
+if "\nplugins:" not in text and not text.startswith("plugins:"):
+    cfg.write_text(text.rstrip() + "\n\nplugins:\n  enabled:\n    - promptguard\n", encoding="utf-8")
+else:
+    cfg.write_text(
+        text.rstrip()
+        + "\n  # promptguard (install-agent-adapters)\n  # ensure plugins.enabled includes promptguard\n",
+        encoding="utf-8",
+    )
+PY
+    fi
+    echo "Installed PromptGuard skill + pre_tool_call plugin for Hermes ($HERMES_HOME)."
+    echo "Restart hermes / gateway. Env: PROMPTGUARD_PROFILE=coding-agent PROMPTGUARD_FAIL_ON=high"
+    echo "Optional shell hook (if you prefer config.yaml hooks):"
+    echo "  hooks.pre_tool_call → $HERMES_HOME/agent-hooks/pre_tool_promptguard.py"
+  else
+    echo "Installed PromptGuard under $HERMES_HOME (hermes CLI not on PATH)."
+    echo "Enable plugin later with: HERMES_HOME=$HERMES_HOME hermes plugins enable promptguard"
+  fi
+}
+
 case "${1:-all}" in
   codex) install_codex ;;
   claude) install_claude ;;
   opencode) install_opencode ;;
   openclaw) install_openclaw ;;
-  all) install_codex; install_claude; install_opencode; install_openclaw ;;
-  *) echo "Usage: $0 [all|codex|claude|opencode|openclaw]" >&2; exit 2 ;;
+  hermes) install_hermes ;;
+  all) install_codex; install_claude; install_opencode; install_openclaw; install_hermes ;;
+  *) echo "Usage: $0 [all|codex|claude|opencode|openclaw|hermes]" >&2; exit 2 ;;
 esac

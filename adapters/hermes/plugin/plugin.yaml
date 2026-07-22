@@ -1,0 +1,6 @@
+name: promptguard
+version: 1.0.0
+description: "Pre-write PromptGuard contract audit — blocks prompt-like writes with high+ findings (profile/fail-on env)."
+author: PromptGuard
+provides_hooks:
+  - pre_tool_call
