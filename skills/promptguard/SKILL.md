@@ -5,7 +5,7 @@ description: >
   and coding-agent instructions as executable contracts. Use before writing or
   seeding prompts; blocks vague "fix this / write code" tasks missing ownership
   and verification. Works with Hermes, Claude Code, Codex, OpenCode, OpenClaw.
-version: 0.4.1
+version: 0.4.2
 metadata:
   short-description: Audit prompts as executable contracts
   hermes:
@@ -104,6 +104,5 @@ Prefer concrete contract fixes over generic prompt advice.
 
 ## Out of scope (this skill)
 
-- Interactive TUI
-- LLM-as-judge second pass
+- Network LLM / remote model calls (stay offline and deterministic)
 - Runtime chat firewalls / red-team attack generation

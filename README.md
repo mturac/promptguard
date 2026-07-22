@@ -128,23 +128,20 @@ promptguard export-promptfoo eval/cases.jsonl -o promptfooconfig.yaml
 
 Rule packs may use `word_any` / `regex_any` fields for tighter matching; classic `any` substring fields stay compatible.
 
-Interactive review and optional judge:
+Interactive review:
 
 ```bash
 promptguard tui task.md --profile coding-agent
-# Opt-in only (offline by default):
-TURAC_LLM_ROUTER_URL=http://localhost:8000 TURAC_LLM_ROUTER_KEY=... \
-  promptguard audit task.md --judge --profile coding-agent --fail-on high
 ```
 
-OpenClaw env (after adapter install):
+OpenClaw / Hermes env (after adapter install):
 
 ```bash
 export PROMPTGUARD_PROFILE=coding-agent
 export PROMPTGUARD_FAIL_ON=high
 ```
 
-Out of scope: default (non-opt-in) LLM judge, full curses two-pane polish, runtime chat rails / red-team harnesses.
+Out of scope: network LLM calls, full curses two-pane polish, runtime chat rails / red-team harnesses. PromptGuard stays offline and deterministic by default.
 
 ## Agent-Native Guard
 

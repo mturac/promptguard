@@ -123,16 +123,6 @@ promptguard tui task.md --profile coding-agent
 Interactive when TTY: `j`/`k` move, `f` fix draft, `a` accept risk, `s` save, `q` quit.  
 Non-TTY (CI/pipes): table dump; exit 1 if high+ findings.
 
-### Opt-in LLM judge
-
-```bash
-export TURAC_LLM_ROUTER_URL=http://localhost:8000
-export TURAC_LLM_ROUTER_KEY=your-key
-promptguard audit task.md --judge --profile coding-agent --fail-on high
-```
-
-Default audit path stays offline. Judge failures exit 2.
-
 ### OpenClaw profile/fail-on
 
 ```bash
@@ -267,6 +257,6 @@ PG018 secret/tool exfiltration instructions
 
 ## Out of scope
 
-- Interactive TUI (see `docs/TUI.md` concept only)
-- Default LLM-as-judge pass
+- Network LLM calls / remote model judges (product is offline + deterministic)
+- Full curses two-pane TUI polish (minimal `promptguard tui` is shipped)
 - Runtime chat rails / red-team attack generation

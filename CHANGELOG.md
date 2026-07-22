@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.2
+
+- Remove opt-in `--judge` / network LLM second pass from the public product (offline-only surface).
+
 ## 0.4.1
 
 - Hermes Agent adapter (first-class): skill + `pre_tool_call` plugin + shell hook + AGENTS.md.
@@ -14,7 +18,6 @@
 - Skill pack metadata under `skills/promptguard/references/packs/`.
 - Claude hook script uses package auditor with coding-agent profile.
 - `promptguard tui PATH` minimal interactive review (non-TTY table fallback).
-- Opt-in `--judge` second pass via turac-llm-router (`TURAC_LLM_ROUTER_URL` / `TURAC_LLM_ROUTER_KEY`).
 
 ## 0.3.0
 
