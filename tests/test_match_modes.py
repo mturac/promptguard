@@ -27,3 +27,21 @@ def test_word_missing_any_blocks_when_present():
     rule = {"word_any": ["deploy"], "word_missing_any": ["rollback"]}
     assert _matches(rule, "deploy to prod", "deploy to prod")
     assert not _matches(rule, "deploy with rollback", "deploy with rollback")
+
+
+def test_word_also_any_requires_both_words():
+    rule = {"word_any": ["deploy"], "word_also_any": ["production"]}
+    assert _matches(rule, "deploy to production", "deploy to production")
+    assert not _matches(rule, "deploy the docs", "deploy the docs")
+
+
+def test_regex_also_any_requires_both_patterns():
+    rule = {"regex_any": [r"deploy"], "regex_also_any": [r"prod(uction)?"]}
+    assert _matches(rule, "deploy to prod", "deploy to prod")
+    assert not _matches(rule, "deploy the docs", "deploy the docs")
+
+
+def test_regex_missing_any_blocks_when_present():
+    rule = {"regex_any": [r"deploy"], "regex_missing_any": [r"roll\s?back"]}
+    assert _matches(rule, "deploy to prod", "deploy to prod")
+    assert not _matches(rule, "deploy with a roll back plan", "deploy with a roll back plan")
